@@ -1,11 +1,9 @@
-from pprint import pprint as pp
-
 class Flight:
     def __init__(self, flight_number, airplane):
         self.airplane = airplane
         self.flight_number = flight_number
         rows, seats = self.airplane.get_seating_plan()
-        self.seating_plan = [None] + [{letter: None for letter in seats} for _ in rows] # składniowe dummy name
+        self.seating_plan = [None] + [{letter: None for letter in seats} for _ in rows]  # składniowe dummy name
     
     def get_airline(self):
         return self.flight_number[:2]
@@ -39,7 +37,7 @@ class Flight:
         if self.seating_plan[row][letter] is not None:
             raise ValueError(f"Seat is already taken: {seat}")
         self.seating_plan[row][letter] = passenger
-        
+    
     def relocate_passenger(self, seat_from, seat_to):
         row_from, letter_from = self._parse_seat(seat_from)
         if self.seating_plan[row_from][letter_from] is None:
@@ -49,46 +47,34 @@ class Flight:
             raise ValueError(f"Seat is already taken: {seat_to}")
         self.seating_plan[row_to][letter_to] = self.seating_plan[row_from][letter_from]
         self.seating_plan[row_from][letter_from] = None
+    
+    def get_empty_seats(self):
+        empty_seats = 0
+        for value in self.seating_plan[1:]:
+            for seat in value.values():
+                if seat is None:
+                    empty_seats += 1
+        return empty_seats
+    
+    def get_passenger_list(self):
+        rows, seats = self.airplane.get_seating_plan()
+        for row in rows:
+            for letter in seats:
+                passenger = self.seating_plan[row][letter]
+                if passenger is not None:
+                    yield passenger, f'{row}{letter}'
+
+    def get_seating_plan(self):
+        return self.seating_plan[1:]
+    
+    def print_tickets(self, printer):
+        for passenger, seat in self.get_passenger_list():
+            printer(passenger, seat, self.get_model(), self.flight_number)
+    
+    def print_seating_plan(self, printer):
+        printer(self)
+        
+    def print_all_passengers(self, printer):
+        printer(self)
         
         
-class Airplane:
-    def get_seating_no(self):
-        rows, seats = self.get_seating_plan() # touple unpacking
-        return len(rows) * len(seats)
-
-
-class AirbusA380(Airplane):
-    @staticmethod
-    def get_airplane_model():
-        return 'Airbus A380'
-    
-    @staticmethod
-    def get_seating_plan():
-        return range(1, 26), 'ABCDEG' # tuple packing
-
-
-class Boeing737Max(Airplane):
-    @staticmethod
-    def get_airplane_model():
-        return 'Airbus 737 Max'
-    
-    @staticmethod
-    def get_seating_plan():
-        return range(1, 46), 'ABCDEGHJK'
-
-
-airbus = AirbusA380()
-boeing = Boeing737Max()
-f = Flight('L0127', airbus)
-
-f.allocate_passenger("Lech K", "12C")
-f.allocate_passenger("Jarosław K", "12E")
-f.allocate_passenger("Paweł K", "12A")
-f.relocate_passenger("12A", "25G")
-# print(f.get_airline())
-# print(f.get_number())
-# print(f.get_model())
-# print(airbus.get_airplane_model())
-# print(airbus.get_seating_no())
-# print(AirbusA380.get_airplane_model())
-pp(f.seating_plan)
